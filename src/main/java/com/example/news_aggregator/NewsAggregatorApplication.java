@@ -68,15 +68,15 @@ public class NewsAggregatorApplication implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
 
         // Загрузка SQL-скрипта из ресурсов
-//        Resource resource = resourceLoader.getResource("classpath:scripts/script.sql");
-//        String sql = new BufferedReader(new InputStreamReader(resource.getInputStream()))
-//                .lines()
-//                .collect(Collectors.joining("\n"));
-//
+        Resource resource = resourceLoader.getResource("classpath:scripts/script.sql");
+        String sql = new BufferedReader(new InputStreamReader(resource.getInputStream()))
+                .lines()
+                .collect(Collectors.joining("\n"));
+
 //        // Выполнение SQL-скрипта
-//        jdbcTemplate.execute(sql);
-//        System.out.println();
-//        System.out.println("<*> SQL-скрипт успешно выполнен!");
+        jdbcTemplate.execute(sql);
+        System.out.println();
+        System.out.println("<*> SQL-скрипт успешно выполнен!");
 
         // Регистрация статических меню
         menuRegistrar.registerStaticMenus();
