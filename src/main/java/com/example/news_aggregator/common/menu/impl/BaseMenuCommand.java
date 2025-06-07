@@ -1,27 +1,56 @@
 package com.example.news_aggregator.common.menu.impl;
 
 import com.example.news_aggregator.common.menu.MenuCommand;
-import com.example.news_aggregator.common.menu.MenuItemDescriptor;
 import com.example.news_aggregator.menu.StaticMenuItem;
+import lombok.Getter;
 
-public abstract class BaseMenuCommand implements MenuCommand {
+import java.util.Scanner;
 
-    private final MenuItemDescriptor menuItemDescriptor;
+/**
+ * Базовая реализация команды меню.
+ * Включает реализацию интерфейса MenuItem посредством аннотации @Getter из Lombok.
+ */
+@Getter
+public class BaseMenuCommand implements MenuCommand {
 
+    private final String id;
+    private final String title;
+    private final boolean isDynamic;
+
+    /**
+     * Конструирование элемента меню из статического описания.
+     *
+     * @param staticMenuItem Элемент перечисления статических элементов меню.
+     */
     protected BaseMenuCommand(
             StaticMenuItem staticMenuItem
     ) {
-        this.menuItemDescriptor = StaticMenuItem.toDescriptor(staticMenuItem);
+        this(
+                staticMenuItem.name(), // ID элемента меню - уникальное имя элемента перечисления
+                staticMenuItem.getTitle(), // Наименование элемента меню
+                false // Флаг происхождения - false - статическое меню
+        );
     }
 
+    /**
+     * Конструирование динамического элемента меню.
+     *
+     * @param id        ID элемента меню.
+     * @param title     Наименование элемента меню.
+     * @param isDynamic Флаг происхождения - false - статическое меню, true - динамическое меню.
+     */
     protected BaseMenuCommand(
-            MenuItemDescriptor menuItemDescriptor
+            String id,
+            String title,
+            boolean isDynamic
     ) {
-        this.menuItemDescriptor = menuItemDescriptor;
+        this.id = id;
+        this.title = title;
+        this.isDynamic = isDynamic;
     }
 
     @Override
-    public MenuItemDescriptor getDescriptor() {
-        return menuItemDescriptor;
+    public void execute(Scanner scanner) {
+        // Базовая реализация не требуется
     }
 }

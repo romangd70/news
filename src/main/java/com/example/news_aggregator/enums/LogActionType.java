@@ -10,9 +10,7 @@ import java.util.Arrays;
 public enum LogActionType implements EnumWithId {
 
     ADD_NEWS_ACTION(1),
-    DELETE_NEWS_ACTION(2),
-    ADD_NEWS_SOURCE_ACTION(3),
-    DELETE_NEWS_SOURCE_ACTION(4);
+    DELETE_NEWS_ACTION(2);
 
     private final int id;
 

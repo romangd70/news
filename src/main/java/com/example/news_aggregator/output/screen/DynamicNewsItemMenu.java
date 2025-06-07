@@ -1,52 +1,47 @@
 package com.example.news_aggregator.output.screen;
 
-import com.example.news_aggregator.common.menu.MenuDescriptor;
+import com.example.news_aggregator.common.menu.MenuRegistry;
 import com.example.news_aggregator.common.menu.impl.BaseMenu;
-import com.example.news_aggregator.common.menu.impl.MenuBuilder;
 import com.example.news_aggregator.model.news.News;
-import lombok.Getter;
 
+/**
+ * Реализация динамического меню для просмотра содержимого объекта новости.
+ * Выполнение операций над объектом новости.
+ */
 public class DynamicNewsItemMenu extends BaseMenu {
 
     private final News newsItem;
 
-    protected DynamicNewsItemMenu(
-            MenuDescriptor menuDescriptor,
+    /**
+     * Конструирование динамического меню просмотра новости.
+     *
+     * @param newsItem Объект новости к отображению.
+     */
+    DynamicNewsItemMenu(
+            String id,
+            String title,
+            MenuRegistry menuRegistry,
             News newsItem
     ) {
-        super(menuDescriptor);
+        super(id, title, true, menuRegistry);
 
         this.newsItem = newsItem;
     }
 
     @Override
     protected void printMenuDescription() {
+        // Выведем информацию о новости текст новости в описание меню
+        StringBuilder headerBuilder = new StringBuilder();
+        headerBuilder.append(String.format("%-15s: %s%n", "Дата публикации", newsItem.getPublicationDate()));
+        headerBuilder.append(String.format("%-15s: %s%n", "Категория", newsItem.getCategory().getName()));
+        headerBuilder.append(String.format("%-15s: %s%n", "Источник", newsItem.getSource().getName()));
+        System.out.println(headerBuilder);
+
         System.out.println(newsItem.getTitle());
-        printWrapped(newsItem.getContent(), BaseMenu.LINE_WIDTH);
-
         System.out.println();
-    }
 
-    public static class Builder extends MenuBuilder<DynamicNewsItemMenu, DynamicNewsItemMenu.Builder> {
-
-        private News newsItem = null;
-
-        public Builder withNewsItem(News newsItem) {
-            this.newsItem = newsItem;
-            return this;
-        }
-
-        @Override
-        protected DynamicNewsItemMenu createMenu() {
-            return new DynamicNewsItemMenu(
-                    getMenuDescriptor(),
-                    newsItem
-            );
-        }
-
-        @Override
-        protected Builder getBuilder() {
-            return this;
-        }
+        printWrapped(newsItem.getContent(), BaseMenu.DEFAULT_LINE_WIDTH);
+        System.out.println(newsItem.getUrl());
+        System.out.println();
     }
 }

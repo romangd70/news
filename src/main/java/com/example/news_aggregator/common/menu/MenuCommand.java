@@ -4,6 +4,10 @@ import com.example.news_aggregator.common.exception.NewsAggregatorIllegalArgumen
 
 import java.util.Scanner;
 
+/**
+ * Интерфейс команды.
+ * Команда - элемент меню, который выполняет действие, но не осуществляет переход на другой уровень меню.
+ */
 public interface MenuCommand extends MenuItem {
 
     /**

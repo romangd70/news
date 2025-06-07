@@ -1,10 +1,9 @@
 package com.example.news_aggregator.menu.main.switcher;
 
-import com.example.news_aggregator.common.menu.MenuDescriptor;
 import com.example.news_aggregator.common.menu.impl.BaseMenuSwitcher;
 import com.example.news_aggregator.menu.StaticMenuItem;
 import com.example.news_aggregator.model.news.News;
-import com.example.news_aggregator.output.screen.NewsMenuBuilder;
+import com.example.news_aggregator.output.screen.NewsDynamicMenuFactory;
 import com.example.news_aggregator.service.filter.FilterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,17 +15,17 @@ import java.util.Scanner;
 public class FilterNewsByDateSwitcher extends BaseMenuSwitcher {
 
     private final FilterService filterService;
-    private final NewsMenuBuilder newsMenuBuilder;
+    private final NewsDynamicMenuFactory newsDynamicMenuFactory;
 
     @Autowired
     protected FilterNewsByDateSwitcher(
             FilterService filterService,
-            NewsMenuBuilder newsMenuBuilder
+            NewsDynamicMenuFactory newsDynamicMenuFactory
     ) {
-        super(StaticMenuItem.BY_DATE_COMMAND);
+        super(StaticMenuItem.BY_DATE_SWITCHER);
 
         this.filterService = filterService;
-        this.newsMenuBuilder = newsMenuBuilder;
+        this.newsDynamicMenuFactory = newsDynamicMenuFactory;
     }
 
     @Override
@@ -41,8 +40,8 @@ public class FilterNewsByDateSwitcher extends BaseMenuSwitcher {
         // Формируем заголовок для отображения меню просмотра
         String title = String.format("Новости на %s", newsFilter.getByDate());
 
-        // Формируем динамическое меню для списка новостей и заменяем дескриптор перехода
-        MenuDescriptor menuDescriptor = newsMenuBuilder.build(title, filteredNews);
-        setNextMenuDescriptor(menuDescriptor);
+        // Формируем динамическое меню для списка новостей и заменяем идентификатор перехода
+        String menuId = newsDynamicMenuFactory.create(title, filteredNews);
+        setNextMenuId(menuId);
     }
 }

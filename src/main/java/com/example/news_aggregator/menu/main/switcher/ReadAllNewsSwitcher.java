@@ -1,10 +1,9 @@
 package com.example.news_aggregator.menu.main.switcher;
 
-import com.example.news_aggregator.common.menu.MenuDescriptor;
 import com.example.news_aggregator.common.menu.impl.BaseMenuSwitcher;
 import com.example.news_aggregator.menu.StaticMenuItem;
 import com.example.news_aggregator.model.news.News;
-import com.example.news_aggregator.output.screen.NewsMenuBuilder;
+import com.example.news_aggregator.output.screen.NewsDynamicMenuFactory;
 import com.example.news_aggregator.repository.NewsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,24 +15,25 @@ import java.util.Scanner;
 public class ReadAllNewsSwitcher extends BaseMenuSwitcher {
 
     private final NewsRepository newsRepository;
-    private final NewsMenuBuilder newsMenuBuilder;
+    private final NewsDynamicMenuFactory newsDynamicMenuFactory;
 
     @Autowired
     protected ReadAllNewsSwitcher(
             NewsRepository newsRepository,
-            NewsMenuBuilder newsMenuBuilder
+            NewsDynamicMenuFactory newsDynamicMenuFactory
     ) {
         super(StaticMenuItem.ALL_NEWS_SWITCHER);
 
         this.newsRepository = newsRepository;
-        this.newsMenuBuilder = newsMenuBuilder;
+        this.newsDynamicMenuFactory = newsDynamicMenuFactory;
     }
 
     @Override
     public void execute(Scanner scanner) {
         List<News> allNews = newsRepository.findAll();
-        // Формируем динамическое меню для списка новостей и заменяем дескриптор перехода
-        MenuDescriptor menuDescriptor = newsMenuBuilder.build("Все новости", allNews);
-        setNextMenuDescriptor(menuDescriptor);
+
+        // Формируем динамическое меню для списка новостей и заменяем идентификатор перехода
+        String menuId = newsDynamicMenuFactory.create("Все новости", allNews);
+        setNextMenuId(menuId);
     }
 }

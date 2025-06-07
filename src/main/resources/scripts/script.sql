@@ -34,3 +34,6 @@ VALUES (1, 'RIA Новости', 'https://ria.ru/lenta/', true,
         'yyyy-MM-dd''T''HH:mm:ssXXX',
         'meta[name=description]', 'content',
         'title', null);
+
+INSERT INTO settings (id, type_id, value) VALUES (1, 1, '0 0 8 * * *'),
+                                                 (2, 2, '1');

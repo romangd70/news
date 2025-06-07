@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface NewsRepository extends JpaRepository<News, Long> {
@@ -40,5 +41,13 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             "GROUP BY k, period")
     List<Object[]> findKeywordTrends(LocalDateTime startDate,
                                      LocalDateTime endDate);
+
+    @Query("SELECT DISTINCT n FROM News n JOIN n.keywords k WHERE LOWER(k) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<News> findNewsBySimilarKeywords(String keyword);
+
+    @Query("SELECT n FROM News n WHERE n.publicationDate < :cutoffDate")
+    List<News> getNewsOlderThan(LocalDateTime cutoffDate);
+
+    void deleteAllByIdIn(Set<Long> idsToDelete);
 
 }

@@ -47,6 +47,9 @@ public class News {
     @Column(name = "publication_date", nullable = false)
     private LocalDateTime publicationDate;
 
+    @Column(name = "url", nullable = false)
+    private String url;
+
     @JoinColumn(name = "source_id", nullable = false)
     @ManyToOne
     private Source source;

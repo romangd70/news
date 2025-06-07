@@ -1,6 +1,15 @@
 package com.example.news_aggregator.common.menu;
 
-public interface MenuSwitcher extends MenuCommand  {
+/**
+ * Интерфейс переключателя.
+ * Переключатель это команда, которая после выполнения действия произведет переключение контекста ввода на другое меню.
+ */
+public interface MenuSwitcher extends MenuCommand {
 
-    MenuDescriptor getNextMenuDescriptor();
+    /**
+     * Получение идентификатора меню, переход на которое должен быть осуществлен.
+     *
+     * @return Строка, содержащая идентификатор меню.
+     */
+    String getNextMenuId();
 }

@@ -2,72 +2,91 @@ package com.example.news_aggregator.common.menu.impl;
 
 import com.example.news_aggregator.common.exception.NewsAggregatorNotFoundException;
 import com.example.news_aggregator.common.menu.Menu;
-import com.example.news_aggregator.common.menu.MenuDescriptor;
-import com.example.news_aggregator.common.menu.MenuItemDescriptor;
+import com.example.news_aggregator.common.menu.MenuItem;
+import com.example.news_aggregator.common.menu.MenuRegistry;
 import com.example.news_aggregator.enums.Errors;
 import com.example.news_aggregator.menu.StaticMenu;
 import com.example.news_aggregator.menu.StaticMenuItem;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Базовая реализация меню.
+ * Включает частичную реализацию интерфейса Menu посредством аннотации @Getter из Lombok.
+ */
+@Getter
 public class BaseMenu implements Menu {
 
-    protected final static int LINE_WIDTH = 80;
+    /**
+     * Настройка для метода printWrapped.
+     * Текст будет перенесен на новую строку, если длина строки превысит заданное значение.
+     */
+    protected final static int DEFAULT_LINE_WIDTH = 80;
 
-    private final Map<String, MenuItemDescriptor> menuItemDescriptorByKey = new HashMap<>();
-    private final List<MenuItemData> menuItemDataList = new ArrayList<>();
-    private final MenuDescriptor menuDescriptor;
+    private final MenuRegistry menuRegistry;
 
-    protected BaseMenu(StaticMenu staticMenu) {
-        this.menuDescriptor = StaticMenu.toDescriptor(staticMenu);
+    private final String id;
+    private final String title;
+    private final boolean isDynamic;
+
+    private final Map<String, String> menuItemIdByInputKey = new HashMap<>();
+    private final List<MenuItemWithKey> menuItemIdWithKeys = new ArrayList<>();
+
+    /**
+     * Конструирование меню из статического описания.
+     *
+     * @param staticMenu Элемент перечисления статических меню.
+     */
+    protected BaseMenu(
+            StaticMenu staticMenu,
+            MenuRegistry menuRegistry
+    ) {
+        this(
+                staticMenu.name(), // ID меню - уникальное имя элемента перечисления
+                staticMenu.getTitle(), // Заголовок меню
+                false, // Флаг происхождения - false - статическое меню
+                menuRegistry // Реестр меню
+        );
     }
 
-    protected BaseMenu(MenuDescriptor menuDescriptor) {
-        this.menuDescriptor = menuDescriptor;
-    }
-
-    public static void printWrapped(String text, int lineWidth) {
-        String[] words = text.split(" ");
-        StringBuilder line = new StringBuilder();
-
-        for (String word : words) {
-            if (line.length() + word.length() > lineWidth) {
-                System.out.println(line);
-                line = new StringBuilder(word);
-            } else {
-                if (!line.isEmpty()) {
-                    line.append(" ");
-                }
-                line.append(word);
-            }
-        }
-
-        if (!line.isEmpty()) {
-            System.out.println(line);
-        }
+    /**
+     * Конструирование динамического меню.
+     *
+     * @param id           ID меню.
+     * @param title        Заголовок меню.
+     * @param isDynamic    Флаг происхождения - false - статическое меню, true - динамическое меню.
+     * @param menuRegistry Реестр меню.
+     */
+    public BaseMenu(
+            String id,
+            String title,
+            boolean isDynamic,
+            MenuRegistry menuRegistry
+    ) {
+        this.id = id;
+        this.title = title;
+        this.isDynamic = isDynamic;
+        this.menuRegistry = menuRegistry;
     }
 
     //region Menu implementation
     @Override
-    public MenuDescriptor getDescriptor() {
-        return menuDescriptor;
-    }
-
-    @Override
-    public MenuItemDescriptor getItemDescriptor(String inputKey) throws NewsAggregatorNotFoundException {
-
-        if (menuItemDescriptorByKey.containsKey(inputKey)) {
-            return menuItemDescriptorByKey.get(inputKey);
+    public MenuItem getMenuItem(String inputKey) throws NewsAggregatorNotFoundException {
+        String menuItemId;
+        // Сначала получим идентификатор элемента меню по ключу ввода
+        if (menuItemIdByInputKey.containsKey(inputKey)) {
+            menuItemId = menuItemIdByInputKey.get(inputKey);
         } else {
             throw new NewsAggregatorNotFoundException(Errors.UNKNOWN_MENU_KEY);
         }
-    }
-    //endregion Menu implementation
 
-    //region Protected helpers
+        // Теперь запросим элемент меню в реестре
+        return menuRegistry.getMenuItem(menuItemId);
+    }
 
     @Override
     public void print() {
@@ -76,36 +95,37 @@ public class BaseMenu implements Menu {
         printMenuItems();
         printMenuFooter();
     }
+    //endregion Menu implementation
 
     /**
      * Добавляет элемент статического меню.
      *
-     * @param inputKey       Идентификатор элемента меню (вводится с клавиатуры).
+     * @param inputKey       Ключ активации элемента меню (вводится с клавиатуры).
      * @param staticMenuItem Элемент перечисления, описывающего элемент меню.
      */
-    protected void addMenuItem(String inputKey, StaticMenuItem staticMenuItem) {
-        MenuItemDescriptor menuItemDescriptor = StaticMenuItem.toDescriptor(staticMenuItem);
-
-        menuItemDescriptorByKey.put(inputKey, menuItemDescriptor);
-        menuItemDataList.add(new MenuItemData(inputKey, menuItemDescriptor));
+    public void addMenuItem(String inputKey, StaticMenuItem staticMenuItem) {
+        String menuItemId = staticMenuItem.name();
+        addMenuItem(inputKey, menuItemId);
     }
 
     /**
      * Добавляет элемент динамического меню.
      *
-     * @param inputKey           Идентификатор элемента меню (вводится с клавиатуры).
-     * @param menuItemDescriptor Объект, описывающий элемент меню.
+     * @param inputKey   Ключ активации элемента меню (вводится с клавиатуры).
+     * @param menuItemId Идентификатор элемент меню.
      */
-    protected void addMenuItem(String inputKey, MenuItemDescriptor menuItemDescriptor) {
-        menuItemDescriptorByKey.put(inputKey, menuItemDescriptor);
-        menuItemDataList.add(new MenuItemData(inputKey, menuItemDescriptor));
+    public void addMenuItem(String inputKey, String menuItemId) {
+        menuItemIdByInputKey.put(inputKey, menuItemId);
+        menuItemIdWithKeys.add(new MenuItemWithKey(inputKey, menuItemId));
     }
+
+    //region Protected helpers
 
     /**
      * Выводит на экран заголовок меню.
      */
     protected void printMenuHeader() {
-        System.out.printf("%n=== %s ===%n", menuDescriptor.getTitle());
+        System.out.printf("%n=== %s ===%n", getTitle());
     }
 
     /**
@@ -120,11 +140,20 @@ public class BaseMenu implements Menu {
      * Выводит на экран список элементов меню.
      */
     protected void printMenuItems() {
-        menuItemDataList.forEach(menuItemData -> System.out.printf(
-                "[%s]. %s%n",
-                menuItemData.inputKey(),
-                menuItemData.menuItemDescriptor().getTitle()
-        ));
+        int maxInputKeyLength = 0;
+        for (MenuItemWithKey menuItemWithKey : menuItemIdWithKeys) {
+            maxInputKeyLength = Math.max(maxInputKeyLength, menuItemWithKey.inputKey.length());
+        }
+        String format = String.format(
+                "[%%%ss]: %%s%%n",
+                maxInputKeyLength
+        );
+
+        for (MenuItemWithKey menuItemWithKey : menuItemIdWithKeys) {
+            String inputKey = menuItemWithKey.inputKey();
+            MenuItem menuItem = getMenuItem(inputKey);
+            System.out.printf(format, inputKey, menuItem.getTitle());
+        }
     }
 
     /**
@@ -133,21 +162,48 @@ public class BaseMenu implements Menu {
     protected void printMenuFooter() {
         System.out.println("==========================");
     }
+
+    /**
+     * Вывод текста с заданной шириной в консоль с переносом в границах слов.
+     *
+     * @param text      Текст для вывода.
+     * @param lineWidth Желаемая ширина строки в символах.
+     */
+    protected void printWrapped(String text, int lineWidth) {
+        // Разбивка текста по словам
+        String[] words = text.split(" ");
+        StringBuilder line = new StringBuilder();
+
+        // Формирование строки из слов
+        for (String word : words) {
+            // Длина строки превысит граничную, если добавить еще слово
+            if (line.length() + word.length() > lineWidth) {
+                // Вывод очередной строки
+                System.out.println(line);
+                // Создание билдера для следующей строки
+                line = new StringBuilder(word);
+            } else {
+                // Добавим слово в билдер строки, не забывая про пробел между словами
+                if (!line.isEmpty()) {
+                    line.append(" ");
+                }
+                line.append(word);
+            }
+        }
+
+        // Вывод последней строки
+        if (!line.isEmpty()) {
+            System.out.println(line);
+        }
+    }
     //endregion Protected helpers
 
-    private record MenuItemData(String inputKey, MenuItemDescriptor menuItemDescriptor) {
-    }
-
-    public static class Builder extends MenuBuilder<BaseMenu, BaseMenu.Builder> {
-
-        @Override
-        protected BaseMenu createMenu() {
-            return new BaseMenu(getMenuDescriptor());
-        }
-
-        @Override
-        protected Builder getBuilder() {
-            return this;
-        }
+    /**
+     * Кортеж из двух элементов, который сопоставляет ключ ввода идентификатору элемента меню.
+     *
+     * @param inputKey   Ключ ввода.
+     * @param menuItemId Идентификатор элемента меню.
+     */
+    private record MenuItemWithKey(String inputKey, String menuItemId) {
     }
 }

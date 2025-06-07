@@ -36,7 +36,7 @@ public class FilterServiceImpl implements FilterService {
         } else if (filter.getByCategory() != null) {
             return newsRepository.findAllByCategoryId(filter.getByCategory());
         } else if (filter.getByKeyword() != null) {
-
+            return newsRepository.findNewsBySimilarKeywords(filter.getByKeyword());
         }
         return Collections.EMPTY_LIST;
     }

@@ -2,12 +2,14 @@ package com.example.news_aggregator.service.parser;
 
 import com.example.news_aggregator.common.exception.NewsAggregatorIllegalStateException;
 import com.example.news_aggregator.enums.Errors;
+import com.example.news_aggregator.enums.LogActionType;
 import com.example.news_aggregator.model.news.Category;
 import com.example.news_aggregator.model.news.News;
 import com.example.news_aggregator.model.news.Source;
 import com.example.news_aggregator.repository.CategoryRepository;
 import com.example.news_aggregator.repository.NewsRepository;
 import com.example.news_aggregator.repository.SourceRepository;
+import com.example.news_aggregator.service.log.LogActionService;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -24,9 +26,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -34,14 +37,17 @@ public class NewsParserImpl implements NewsParser {
 
     public static final String WITHOUT_CATEGORY = "Без категории";
 
+    private final LogActionService logActionService;
     private final SourceRepository sourceRepository;
     private final NewsRepository newsRepository;
     private final CategoryRepository categoryRepository;
 
     @Autowired
-    public NewsParserImpl(SourceRepository sourceRepository,
+    public NewsParserImpl(LogActionService logActionService,
+                          SourceRepository sourceRepository,
                           NewsRepository newsRepository,
                           CategoryRepository categoryRepository) {
+        this.logActionService = logActionService;
         this.sourceRepository = sourceRepository;
         this.newsRepository = newsRepository;
         this.categoryRepository = categoryRepository;
@@ -98,7 +104,14 @@ public class NewsParserImpl implements NewsParser {
             newsList.removeAll(repeatingNews);
 
             // Сохраняем новости
-            newsRepository.saveAll(newsList);
+            List<News> saved = newsRepository.saveAll(newsList);
+
+            // Логируем сохранение новостей в базу данных
+            Set<Long> newsIds = new HashSet<>();
+            for (News news : saved) {
+                newsIds.add(news.getId());
+            }
+            logActionService.log(LogActionType.ADD_NEWS_ACTION, newsIds);
 
         } catch (IOException e) {
             // При ошибке парсинга
@@ -116,9 +129,9 @@ public class NewsParserImpl implements NewsParser {
         try {
             Document articleDoc = Jsoup.connect(articleUrl).get();
 
-            News news = parseMetadata(articleDoc, source);
-            parseMediaLinks(articleDoc);
-            news.setMediaLinks(Collections.emptyList());
+            News news = parseMetadata(articleDoc, source, articleUrl);
+            List<String> mediaLinks = parseMediaLinks(articleDoc);
+            news.setMediaLinks(mediaLinks);
             news.setHash(news.hashCode());
             return news;
         } catch (IOException e) {
@@ -126,7 +139,7 @@ public class NewsParserImpl implements NewsParser {
         }
     }
 
-    private News parseMetadata(Document articleDoc, Source source) {
+    private News parseMetadata(Document articleDoc, Source source, String articleUrl) {
         // Cобираем селекторы и аттрибуты из базы данных, чтобы выделить нужную информацию из статьи
         String titleSelector = source.getTitleSelector();
         String titleAttribute = source.getTitleAttribute();
@@ -170,6 +183,7 @@ public class NewsParserImpl implements NewsParser {
                 content,
                 articleDoc.html(),
                 formattedPublicationDateTime,
+                articleUrl,
                 source,
                 categoryToSet,
                 keywordsAsList,
@@ -178,12 +192,49 @@ public class NewsParserImpl implements NewsParser {
     }
 
     private List<String> parseMediaLinks(Document articleDoc) {
-        Elements mediaLinks = articleDoc.select("img");
-        for (Element media : mediaLinks) {
-            String mediaUrl = media.absUrl("src");
-            System.out.println("Медиафайл: " + mediaUrl);
+        List<String> mediaLinks = new ArrayList<>();
+
+        // Парсим ссылки на изображения
+        Elements imageElements = articleDoc.select("img");
+        for (Element img : imageElements) {
+            String imgUrl = img.absUrl("src");
+            if (!imgUrl.isEmpty()) {
+                mediaLinks.add(imgUrl);
+                System.out.println("Изображение: " + imgUrl);
+            }
         }
-        return Collections.emptyList();
+
+        // Парсим ссылки на видео
+        Elements videoElements = articleDoc.select("video");
+        for (Element video : videoElements) {
+            String videoUrl = video.absUrl("src");
+            if (!videoUrl.isEmpty()) {
+                mediaLinks.add(videoUrl);
+                System.out.println("Видео: " + videoUrl);
+            }
+
+            // Если видео содержит <source> внутри
+            Elements sourceElements = video.select("source");
+            for (Element source : sourceElements) {
+                String sourceUrl = source.absUrl("src");
+                if (!sourceUrl.isEmpty()) {
+                    mediaLinks.add(sourceUrl);
+                    System.out.println("Видео (source): " + sourceUrl);
+                }
+            }
+        }
+
+        // Парсим теги <source> вне видео
+        Elements sourceElements = articleDoc.select("source");
+        for (Element source : sourceElements) {
+            String sourceUrl = source.absUrl("src");
+            if (!sourceUrl.isEmpty() && !mediaLinks.contains(sourceUrl)) {
+                mediaLinks.add(sourceUrl);
+                System.out.println("Source: " + sourceUrl);
+            }
+        }
+
+        return mediaLinks;
     }
 
     private String parseWithAttribute(Document articleDoc, String selector, @Nullable String attribute) {

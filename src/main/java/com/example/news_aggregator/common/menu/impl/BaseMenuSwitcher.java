@@ -1,7 +1,5 @@
 package com.example.news_aggregator.common.menu.impl;
 
-import com.example.news_aggregator.common.menu.MenuDescriptor;
-import com.example.news_aggregator.common.menu.MenuItemDescriptor;
 import com.example.news_aggregator.common.menu.MenuSwitcher;
 import com.example.news_aggregator.menu.StaticMenu;
 import com.example.news_aggregator.menu.StaticMenuItem;
@@ -11,16 +9,19 @@ import lombok.Setter;
 
 import java.util.Scanner;
 
+/**
+ * Базовая реализация переключателя меню.
+ */
 @Getter
 public class BaseMenuSwitcher
         extends BaseMenuCommand
         implements MenuSwitcher {
 
     @Setter(AccessLevel.PROTECTED)
-    private MenuDescriptor nextMenuDescriptor = null;
+    private String nextMenuId = null;
 
     /**
-     * Конструктор для создания стандартного переключателя.
+     * Конструктор для создания статического переключателя на статическое меню.
      *
      * @param staticMenuItem Статическое описание переключателя.
      * @param nextStaticMenu Статическое описание целевого меню.
@@ -31,11 +32,12 @@ public class BaseMenuSwitcher
     ) {
         super(staticMenuItem);
 
-        this.nextMenuDescriptor = StaticMenu.toDescriptor(nextStaticMenu);
+        this.nextMenuId = nextStaticMenu.name();
     }
 
     /**
-     * Конструктор для создания переключателя на динамическое меню.
+     * Конструктор для создания статического переключателя на динамическое меню.
+     * Внимание: nextMenuId должен быть установлен в методе execute.
      *
      * @param staticMenuItem Статическое описание переключателя.
      */
@@ -48,20 +50,23 @@ public class BaseMenuSwitcher
     /**
      * Конструктор для создания динамического переключателя на динамическое меню.
      *
-     * @param menuItemDescriptor Дескриптор переключателя.
-     * @param nextMenuDescriptor Дескриптор целевого меню.
+     * @param menuItemId Идентификатор переключателя.
+     * @param title      Наименование элемента меню.
+     * @param nextMenuId Идентификатор целевого меню.
      */
-    protected BaseMenuSwitcher(
-            MenuItemDescriptor menuItemDescriptor,
-            MenuDescriptor nextMenuDescriptor
+    public BaseMenuSwitcher(
+            String menuItemId,
+            String title,
+            String nextMenuId
     ) {
-        super(menuItemDescriptor);
+        super(menuItemId, title, true);
 
-        this.nextMenuDescriptor = nextMenuDescriptor;
+        this.nextMenuId = nextMenuId;
     }
 
     @Override
     public void execute(Scanner scanner) {
         // Базовая реализация не требуется
+        // Переключатели на динамические меню должны установить идентификатор следующего меню перед выходом из метода.
     }
 }

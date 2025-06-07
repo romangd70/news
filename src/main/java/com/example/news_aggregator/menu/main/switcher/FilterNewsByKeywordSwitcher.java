@@ -1,15 +1,13 @@
 package com.example.news_aggregator.menu.main.switcher;
 
-import com.example.news_aggregator.common.menu.MenuDescriptor;
 import com.example.news_aggregator.common.menu.impl.BaseMenuSwitcher;
 import com.example.news_aggregator.menu.StaticMenuItem;
 import com.example.news_aggregator.model.news.News;
-import com.example.news_aggregator.output.screen.NewsMenuBuilder;
+import com.example.news_aggregator.output.screen.NewsDynamicMenuFactory;
 import com.example.news_aggregator.service.filter.FilterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -17,31 +15,34 @@ import java.util.Scanner;
 public class FilterNewsByKeywordSwitcher extends BaseMenuSwitcher {
 
     private final FilterService filterService;
-    private final NewsMenuBuilder newsMenuBuilder;
+    private final NewsDynamicMenuFactory newsDynamicMenuFactory;
 
     @Autowired
     protected FilterNewsByKeywordSwitcher(
             FilterService filterService,
-            NewsMenuBuilder newsMenuBuilder
+            NewsDynamicMenuFactory newsDynamicMenuFactory
     ) {
-        super(StaticMenuItem.BY_KEYWORDS_COMMAND);
+        super(StaticMenuItem.BY_KEYWORDS_SWITCHER);
 
         this.filterService = filterService;
-        this.newsMenuBuilder = newsMenuBuilder;
+        this.newsDynamicMenuFactory = newsDynamicMenuFactory;
     }
 
     @Override
     public void execute(Scanner scanner) {
-        // TODO: Вывести список ключевых слов
+        System.out.println("Введите ключевое слово");
+        String keyword = scanner.nextLine();
 
-        // TODO: Отфильтровать новости по ключевым словам
-        List<News> filteredNews = Collections.emptyList();
+        List<News> filteredNews = filterService.filter(FilterService.NewsFilter
+                .builder()
+                .byKeyword(keyword)
+                .build());
 
         // Формируем заголовок для отображения меню просмотра
-        String title = String.format("Новости по ключевому слову '%s'", "Указать ключевое слово");
+        String title = String.format("Новости по ключевому слову '%s'", keyword);
 
-        // Формируем динамическое меню для списка новостей и заменяем дескриптор перехода
-        MenuDescriptor menuDescriptor = newsMenuBuilder.build(title, filteredNews);
-        setNextMenuDescriptor(menuDescriptor);
+        // Формируем динамическое меню для списка новостей и заменяем идентификатор перехода
+        String menuId = newsDynamicMenuFactory.create(title, filteredNews);
+        setNextMenuId(menuId);
     }
 }

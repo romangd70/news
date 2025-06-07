@@ -1,5 +1,6 @@
 package com.example.news_aggregator.common.menu;
 
+import com.example.news_aggregator.common.exception.NewsAggregatorIllegalArgumentException;
 import com.example.news_aggregator.common.exception.NewsAggregatorIllegalStateException;
 import com.example.news_aggregator.common.exception.NewsAggregatorNotFoundException;
 import com.example.news_aggregator.enums.Errors;
@@ -20,6 +21,12 @@ public class MenuRunner {
     private final MenuRegistry menuRegistry;
     private final ScannerProvider scannerProvider;
 
+    /**
+     * Spring автоматически обеспечит наличие зависимостей, указанных как параметры конструктора.
+     *
+     * @param menuRegistry    Реестр меню для получения меню и его элементов.
+     * @param scannerProvider Провайдер сканера для обработки пользовательского ввода.
+     */
     @Autowired
     public MenuRunner(
             MenuRegistry menuRegistry,
@@ -37,8 +44,7 @@ public class MenuRunner {
      * @param staticMenu Ссылка на описание статического меню.
      */
     public void run(StaticMenu staticMenu) {
-        MenuDescriptor menuDescriptor = StaticMenu.toDescriptor(staticMenu);
-        run(menuDescriptor);
+        run(staticMenu.name());
     }
 
     /**
@@ -46,11 +52,11 @@ public class MenuRunner {
      * Осуществляет отображение меню, запуск обработки выбора элементов меню.
      * Осуществляет перехват ошибок и вывод их на экран.
      *
-     * @param startMenuDescriptor Дескриптор стартового меню.
+     * @param startMenuId Идентификатор стартового меню.
      */
-    public void run(MenuDescriptor startMenuDescriptor) {
+    public void run(String startMenuId) {
         Scanner scanner = scannerProvider.getScanner();
-        Menu currentMenu = menuRegistry.getMenu(startMenuDescriptor);
+        Menu currentMenu = menuRegistry.getMenu(startMenuId);
 
         String inputKey;
         do {
@@ -68,8 +74,7 @@ public class MenuRunner {
             // В случае неудачной попытки выводим сообщение об ошибке и повторяем цикл заново
             MenuItem menuItem;
             try {
-                MenuItemDescriptor itemDescriptor = currentMenu.getItemDescriptor(inputKey);
-                menuItem = menuRegistry.getMenuItem(itemDescriptor);
+                menuItem = currentMenu.getMenuItem(inputKey);
             } catch (NewsAggregatorNotFoundException e) {
                 System.out.println(e.getMessage());
                 continue;
@@ -88,8 +93,8 @@ public class MenuRunner {
                     // В случае переключателя на динамическое меню это могут быть операции по созданию динамического меню
                     menuSwitcher.execute(scanner);
                     // Теперь попросим целевое меню для перехода
-                    MenuDescriptor nextMenuDescriptor = menuSwitcher.getNextMenuDescriptor();
-                    currentMenu = menuRegistry.getMenu(nextMenuDescriptor);
+                    String nextMenuId = menuSwitcher.getNextMenuId();
+                    currentMenu = menuRegistry.getMenu(nextMenuId);
                 } else if (menuItem instanceof MenuCommand menuCommand) {
                     menuCommand.execute(scanner);
                 } else {
@@ -99,7 +104,7 @@ public class MenuRunner {
                             Errors.UNSUPPORTED_MENU_ITEM_TYPE_S, menuItem.getClass().getSimpleName()
                     );
                 }
-            } catch (NewsAggregatorIllegalStateException | NewsAggregatorNotFoundException e) {
+            } catch (NewsAggregatorIllegalStateException | NewsAggregatorNotFoundException | NewsAggregatorIllegalArgumentException e) {
                 // Выводим сообщение об ошибке и уходим на новый круг
                 System.out.println(e.getMessage());
             }

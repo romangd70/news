@@ -71,29 +71,12 @@ public class DynamicPopularityStatisticsCommand extends BaseMenuCommand {
             } catch (DateTimeParseException e) {
                 System.out.println(Errors.ILLEGAL_DATE_FORMAT.getDefaultMessage());
             } catch (Exception e) {
-                System.out.println(Errors.UNHANDLED_ERROR.getDefaultMessage() + e.getMessage());
+                System.out.println(Errors.UNHANDLED_ERROR_S.getDefaultMessage() + e.getMessage());
             }
         }
 
         Map<String, Map<LocalDate, Long>> result = statisticsService.findKeywordTrends(startDateTime, endDateTime);
         printTrends(result);
-//        System.out.println("=".repeat(80));
-//        System.out.printf("%-80s | %-15s | %-21s\n", "Ключевое слово", "Дата", "Количество упоминаний");
-//        System.out.println("=".repeat(80));
-//
-//        // Итерация по ключевым словам и их значениям
-//        for (Map.Entry<String, Map<LocalDate, Long>> keywordEntry : result.entrySet()) {
-//            String keyword = keywordEntry.getKey();
-//            Map<LocalDate, Long> dateCounts = keywordEntry.getValue();
-//
-//            for (Map.Entry<LocalDate, Long> dateEntry : dateCounts.entrySet()) {
-//                LocalDate date = dateEntry.getKey();
-//                Long count = dateEntry.getValue();
-//
-//                // Форматированный вывод строки
-//                System.out.printf("%-80s | %-15s | %-21d\n", keyword, date, count);
-//            }
-//        }
     }
 
     private void printTrends(Map<String, Map<LocalDate, Long>> trends) {

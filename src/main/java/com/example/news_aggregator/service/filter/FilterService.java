@@ -18,6 +18,6 @@ public interface FilterService {
         private String byDate;
         private Integer bySource;
         private Integer byCategory;
-        private Integer byKeyword;
+        private String byKeyword;
     }
 }

@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Scanner;
 
+/**
+ * Реализация провайдера сканера.
+ * Включает реализацию интерфейса ScannerProvider посредством аннотации @Getter из Lombok.
+ * Осуществляет финализацию объекта сканера в методе preDestroy().
+ */
 @Getter
 @Component
 public class ScannerProviderImpl implements ScannerProvider {

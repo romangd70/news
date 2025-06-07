@@ -1,13 +1,12 @@
 package com.example.news_aggregator.menu.main.switcher;
 
 import com.example.news_aggregator.common.exception.NewsAggregatorIllegalArgumentException;
-import com.example.news_aggregator.common.menu.MenuDescriptor;
 import com.example.news_aggregator.common.menu.impl.BaseMenuSwitcher;
 import com.example.news_aggregator.enums.Errors;
 import com.example.news_aggregator.menu.StaticMenuItem;
 import com.example.news_aggregator.model.news.Category;
 import com.example.news_aggregator.model.news.News;
-import com.example.news_aggregator.output.screen.NewsMenuBuilder;
+import com.example.news_aggregator.output.screen.NewsDynamicMenuFactory;
 import com.example.news_aggregator.repository.CategoryRepository;
 import com.example.news_aggregator.service.filter.FilterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,19 +23,19 @@ public class FilterNewsByCategorySwitcher extends BaseMenuSwitcher {
 
     private final FilterService filterService;
     private final CategoryRepository categoryRepository;
-    private final NewsMenuBuilder newsMenuBuilder;
+    private final NewsDynamicMenuFactory newsDynamicMenuFactory;
 
     @Autowired
     protected FilterNewsByCategorySwitcher(
             FilterService filterService,
             CategoryRepository categoryRepository,
-            NewsMenuBuilder newsMenuBuilder
+            NewsDynamicMenuFactory newsDynamicMenuFactory
     ) {
-        super(StaticMenuItem.BY_CATEGORY_COMMAND);
+        super(StaticMenuItem.BY_CATEGORY_SWITCHER);
 
         this.filterService = filterService;
         this.categoryRepository = categoryRepository;
-        this.newsMenuBuilder = newsMenuBuilder;
+        this.newsDynamicMenuFactory = newsDynamicMenuFactory;
     }
 
     @Override
@@ -83,8 +82,7 @@ public class FilterNewsByCategorySwitcher extends BaseMenuSwitcher {
         Category category = categoryById.get(categoryId);
         String title = category.getName();
 
-        // Формируем динамическое меню для списка новостей и заменяем дескриптор перехода
-        MenuDescriptor menuDescriptor = newsMenuBuilder.build(title, filteredNews);
-        setNextMenuDescriptor(menuDescriptor);
-    }
+        // Формируем динамическое меню для списка новостей и заменяем идентификатор перехода
+        String menuId = newsDynamicMenuFactory.create(title, filteredNews);
+        setNextMenuId(menuId);    }
 }

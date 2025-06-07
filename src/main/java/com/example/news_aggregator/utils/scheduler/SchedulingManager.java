@@ -1,7 +1,11 @@
 package com.example.news_aggregator.utils.scheduler;
 
+import com.example.news_aggregator.enums.SettingType;
+import com.example.news_aggregator.service.clean.CleanService;
 import com.example.news_aggregator.service.parser.NewsParser;
+import com.example.news_aggregator.service.setting.SettingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -9,15 +13,30 @@ import org.springframework.stereotype.Component;
 public class SchedulingManager {
 
     private final NewsParser newsParser;
+    private final SettingService settingService;
+    private final CleanService cleanService;
 
     @Autowired
-    public SchedulingManager(NewsParser newsParser) {
+    public SchedulingManager(NewsParser newsParser,
+                             SettingService settingService,
+                             CleanService cleanService) {
         this.newsParser = newsParser;
+        this.settingService = settingService;
+        this.cleanService = cleanService;
     }
 
-    // TODO: из настроек
-    @Scheduled(cron = "0 0 8 * * *")
+    @Bean
+    public String getAutoParsingFrequencySetting() {
+        return settingService.getSettingValueById(SettingType.AUTO_PARSING_FREQUENCY.getId());
+    }
+
+    @Scheduled(cron = "#{getAutoParsingFrequencySetting}")
     private void parseNews() {
         newsParser.parseAll();
+    }
+
+    @Scheduled(cron = "#{getAutoParsingFrequencySetting}")
+    private void clearNews() {
+        cleanService.deleteOldNews();
     }
 }
