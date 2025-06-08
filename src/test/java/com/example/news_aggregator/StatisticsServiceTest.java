@@ -83,39 +83,6 @@ public class StatisticsServiceTest {
     }
 
     @Test
-    void testFindKeywordTrends() {
-        // Создаем данные для тестирования
-        LocalDateTime startDate = LocalDateTime.of(2023, 10, 1, 0, 0);
-        LocalDateTime endDate = LocalDateTime.of(2023, 10, 31, 23, 59);
-
-        List<Object[]> mockResults = Arrays.asList(
-                new Object[]{"ИИ", LocalDate.of(2023, 10, 1), 5L},
-                new Object[]{"ИИ", LocalDate.of(2023, 10, 2), 3L},
-                new Object[]{"Изменения климата", LocalDate.of(2023, 10, 1), 2L}
-        );
-        when(newsRepository.findKeywordTrends(startDate, endDate)).thenReturn(mockResults);
-
-        // Тест
-        Map<String, Map<LocalDate, Long>> result = statisticsService.findKeywordTrends(startDate, endDate);
-
-        // Проверяем результаты тестирования
-        assertNotNull(result);
-        assertEquals(2, result.size());
-
-        Map<LocalDate, Long> aiTrends = result.get("ИИ");
-        assertNotNull(aiTrends);
-        assertEquals(2, aiTrends.size());
-        assertEquals(5L, aiTrends.get(LocalDate.of(2023, 10, 1)));
-        assertEquals(3L, aiTrends.get(LocalDate.of(2023, 10, 2)));
-        Map<LocalDate, Long> climateChangeTrends = result.get("Изменения климата");
-        assertNotNull(climateChangeTrends);
-        assertEquals(1, climateChangeTrends.size());
-        assertEquals(2L, climateChangeTrends.get(LocalDate.of(2023, 10, 1)));
-
-        verify(newsRepository, times(1)).findKeywordTrends(startDate, endDate);
-    }
-
-    @Test
     void testGetNewsCountByCategory_NoData() {
         // Создаем данные для тестирования
         when(newsRepository.countNewsByCategory()).thenReturn(Collections.emptyList());

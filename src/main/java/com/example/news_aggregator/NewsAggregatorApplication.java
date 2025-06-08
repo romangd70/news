@@ -1,6 +1,5 @@
 package com.example.news_aggregator;
 
-import com.example.news_aggregator.common.menu.MenuRegistrar;
 import com.example.news_aggregator.common.menu.MenuRunner;
 import com.example.news_aggregator.menu.StaticMenu;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,19 +26,16 @@ import java.util.stream.Collectors;
 public class NewsAggregatorApplication implements ApplicationRunner {
 
     private final MenuRunner menuRunner;
-    private final MenuRegistrar menuRegistrar;
     private final JdbcTemplate jdbcTemplate;
     private final ResourceLoader resourceLoader;
 
     @Autowired
     public NewsAggregatorApplication(
             MenuRunner menuRunner,
-            MenuRegistrar menuRegistrar,
             JdbcTemplate jdbcTemplate,
             ResourceLoader resourceLoader
     ) {
         this.menuRunner = menuRunner;
-        this.menuRegistrar = menuRegistrar;
         this.jdbcTemplate = jdbcTemplate;
         this.resourceLoader = resourceLoader;
     }
@@ -67,20 +63,17 @@ public class NewsAggregatorApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-        // Загрузка SQL-скрипта из ресурсов
+         //Загрузка SQL-скрипта из ресурсов
         Resource resource = resourceLoader.getResource("classpath:scripts/script.sql");
         String sql = new BufferedReader(new InputStreamReader(resource.getInputStream()))
                 .lines()
                 .collect(Collectors.joining("\n"));
 
-//        // Выполнение SQL-скрипта
+        //Выполнение SQL-скрипта
         jdbcTemplate.execute(sql);
         System.out.println();
-        System.out.println("<*> SQL-скрипт успешно выполнен!");
 
-        // Регистрация статических меню
-        menuRegistrar.registerStaticMenus();
-        System.out.println("<*> Регистрация статических меню успешно выполнена!");
+        System.out.println("<*> SQL-скрипт успешно выполнен!");
 
         // Запуск главного цикла приложения
         // Статическое меню 'MAIN' будет установлено в качестве стартового контекста ввода

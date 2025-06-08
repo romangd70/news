@@ -57,7 +57,6 @@ public class BaseMenuCommand implements MenuCommand {
     public void execute(Scanner scanner) {
         // Базовая реализация не требуется
     }
-}
 
     protected String readLine(Scanner scanner) {
         while (!scanner.hasNextLine()) {
@@ -73,6 +72,7 @@ public class BaseMenuCommand implements MenuCommand {
             List<MenuUtils.MenuItemToDisplay> itemsToDisplay
     ) {
         System.out.printf("%n=== %s ===%n", title);
+        MenuUtils.displayMenuItems(itemsToDisplay);
         System.out.println("==========================");
         System.out.print(message);
 

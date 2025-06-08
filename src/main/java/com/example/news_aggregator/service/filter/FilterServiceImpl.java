@@ -24,12 +24,16 @@ public class FilterServiceImpl implements FilterService {
     @Override
     public List<News> filter(NewsFilter filter) {
         if (filter.getByDate() != null && !filter.getByDate().isEmpty()) {
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            LocalDate localDate = LocalDate.parse(filter.getByDate(), dateTimeFormatter);
-
+            LocalDate localDate;
+            try {
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                localDate = LocalDate.parse(filter.getByDate(), dateTimeFormatter);
+            } catch (Exception e) {
+                System.out.println("Неверный формат ввода!");
+                return Collections.emptyList();
+            }
             LocalDateTime startOfDay = localDate.atStartOfDay();
             LocalDateTime endOfDay = localDate.atTime(23, 59, 59);
-
             return newsRepository.findAllByPublicationDateBetween(startOfDay, endOfDay);
         } else if (filter.getBySource() != null) {
             return newsRepository.findAllBySourceId(filter.getBySource());
