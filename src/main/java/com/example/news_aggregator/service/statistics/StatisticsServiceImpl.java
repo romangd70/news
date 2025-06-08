@@ -77,7 +77,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         for (Object[] row : rawTrends) {
             String keyword = (String) row[0];
-            LocalDate period = ((LocalDateTime) row[1]).toLocalDate();
+            LocalDate period = ((LocalDate) row[1]);
             Long count = ((Number) row[2]).longValue();
 
             trends.computeIfAbsent(keyword, k -> new TreeMap<>()).put(period, count);

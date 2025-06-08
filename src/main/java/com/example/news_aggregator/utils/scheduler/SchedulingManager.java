@@ -26,16 +26,16 @@ public class SchedulingManager {
     }
 
     @Bean
-    public String getAutoParsingFrequencySetting() {
+    public String autoParsingFrequencySetting() {
         return settingService.getSettingValueById(SettingType.AUTO_PARSING_FREQUENCY.getId());
     }
 
-    @Scheduled(cron = "#{getAutoParsingFrequencySetting}")
+    @Scheduled(cron = "#{autoParsingFrequencySetting}")
     private void parseNews() {
         newsParser.parseAll();
     }
 
-    @Scheduled(cron = "#{getAutoParsingFrequencySetting}")
+    @Scheduled(cron = "#{autoParsingFrequencySetting}")
     private void clearNews() {
         cleanService.deleteOldNews();
     }

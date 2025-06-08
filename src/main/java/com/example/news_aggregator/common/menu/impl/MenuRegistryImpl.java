@@ -5,6 +5,7 @@ import com.example.news_aggregator.common.menu.Menu;
 import com.example.news_aggregator.common.menu.MenuItem;
 import com.example.news_aggregator.common.menu.MenuRegistry;
 import com.example.news_aggregator.enums.Errors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -13,12 +14,24 @@ import java.util.Map;
 
 /**
  * Реализация реестра меню.
+ * Статические компоненты меню будут собраны автоматически.
+ * Динамические компоненты необходимо регистрировать вручную.
  */
 @Component
 public class MenuRegistryImpl implements MenuRegistry {
 
     private final Map<String, Menu> menuById = new HashMap<>();
     private final Map<String, MenuItem> menuItemById = new HashMap<>();
+
+    @Autowired
+    protected MenuRegistryImpl(
+            List<Menu> menus,
+            List<MenuItem> menuItems
+    ) {
+        menus.forEach(this::registerMenu);
+        menuItems.forEach(this::registerMenuItem);
+        System.out.println("<*> Регистрация статических меню успешно выполнена!");
+    }
 
     //region MenuItemRegistry implementation
     @Override
@@ -49,7 +62,7 @@ public class MenuRegistryImpl implements MenuRegistry {
 
     @Override
     public void clear() {
-        // Собираем списки динамических дескрипторов
+        // Собираем списки идентификаторов динамических элементов меню
         List<String> menuIdsToRemove = menuById.values().stream()
                 .filter(Menu::isDynamic)
                 .map(Menu::getId)
@@ -59,7 +72,7 @@ public class MenuRegistryImpl implements MenuRegistry {
                 .map(MenuItem::getId)
                 .toList();
 
-        // Удаляем меню и элементы меню
+        // Удаляем меню и элементы меню, используя полученные идентификаторы
         menuIdsToRemove.forEach(menuById::remove);
         menuItemIdsToRemove.forEach(menuItemById::remove);
     }

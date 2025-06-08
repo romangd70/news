@@ -1,9 +1,13 @@
 package com.example.news_aggregator.common.menu.impl;
 
+import com.example.news_aggregator.common.exception.NewsAggregatorIllegalArgumentException;
 import com.example.news_aggregator.common.menu.MenuCommand;
+import com.example.news_aggregator.common.menu.MenuUtils;
+import com.example.news_aggregator.enums.Errors;
 import com.example.news_aggregator.menu.StaticMenuItem;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -52,5 +56,35 @@ public class BaseMenuCommand implements MenuCommand {
     @Override
     public void execute(Scanner scanner) {
         // Базовая реализация не требуется
+    }
+}
+
+    protected String readLine(Scanner scanner) {
+        while (!scanner.hasNextLine()) {
+            scanner.next();
+        }
+        return scanner.nextLine();
+    }
+
+    protected String performInput(
+            Scanner scanner,
+            String title,
+            String message,
+            List<MenuUtils.MenuItemToDisplay> itemsToDisplay
+    ) {
+        System.out.printf("%n=== %s ===%n", title);
+        System.out.println("==========================");
+        System.out.print(message);
+
+        // Получаем идентификатор источника из потока ввода
+        String inputKey = readLine(scanner);
+
+        // Проверка наличия элемента по введенному ключу
+        // Обработка неправильного ввода
+        return itemsToDisplay.stream()
+                .map(MenuUtils.MenuItemToDisplay::getInputKey)
+                .filter(key -> key.equalsIgnoreCase(inputKey))
+                .findAny()
+                .orElseThrow(() -> new NewsAggregatorIllegalArgumentException(Errors.UNKNOWN_MENU_KEY));
     }
 }

@@ -1,17 +1,19 @@
 package com.example.news_aggregator.menu.main.switcher;
 
-import com.example.news_aggregator.common.exception.NewsAggregatorIllegalArgumentException;
+import com.example.news_aggregator.common.menu.MenuUtils;
 import com.example.news_aggregator.common.menu.impl.BaseMenuSwitcher;
-import com.example.news_aggregator.enums.Errors;
 import com.example.news_aggregator.menu.StaticMenuItem;
 import com.example.news_aggregator.model.news.Category;
 import com.example.news_aggregator.model.news.News;
 import com.example.news_aggregator.output.screen.NewsDynamicMenuFactory;
 import com.example.news_aggregator.repository.CategoryRepository;
 import com.example.news_aggregator.service.filter.FilterService;
+import org.springframework.beans.factory.ObjectFactory;
+import com.example.news_aggregator.service.filter.NewsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -23,19 +25,19 @@ public class FilterNewsByCategorySwitcher extends BaseMenuSwitcher {
 
     private final FilterService filterService;
     private final CategoryRepository categoryRepository;
-    private final NewsDynamicMenuFactory newsDynamicMenuFactory;
+    private final ObjectFactory<NewsDynamicMenuFactory> newsDynamicMenuFactoryObjectFactory;
 
     @Autowired
     protected FilterNewsByCategorySwitcher(
             FilterService filterService,
             CategoryRepository categoryRepository,
-            NewsDynamicMenuFactory newsDynamicMenuFactory
+            ObjectFactory<NewsDynamicMenuFactory> newsDynamicMenuFactoryObjectFactory
     ) {
         super(StaticMenuItem.BY_CATEGORY_SWITCHER);
 
         this.filterService = filterService;
         this.categoryRepository = categoryRepository;
-        this.newsDynamicMenuFactory = newsDynamicMenuFactory;
+        this.newsDynamicMenuFactoryObjectFactory = newsDynamicMenuFactoryObjectFactory;
     }
 
     @Override
@@ -51,29 +53,28 @@ public class FilterNewsByCategorySwitcher extends BaseMenuSwitcher {
             return;
         }
 
-        List<String> categoryNames = categoryById.values()
+        // Подготавливаем список категорий к отображению
+        // Ключом ввода выступит идентификатор категории
+        List<MenuUtils.MenuItemToDisplay> menuItemsToDisplay = categoryById.values()
                 .stream()
-                .map(category -> String.format("%s - %s%n", category.getId(), category.getName()))
+                .map(category -> new MenuUtils.MenuItemToDisplay(
+                        String.valueOf(category.getId()), category.getName()))
+                .sorted(Comparator.comparing(MenuUtils.MenuItemToDisplay::getMenuItemTitle))
                 .toList();
 
-        StringBuilder stringBuilder = new StringBuilder();
-        for (String category : categoryNames) {
-            stringBuilder.append(category);
-        }
-        String allCategoriesAsString = stringBuilder.toString();
+        // Отображаем список и получаем ключ из потока ввода
+        String inputKey = performInput(
+                scanner,
+                "Категории новостей",
+                "Введите идентификатор категории: ",
+                menuItemsToDisplay
+        );
 
-        System.out.println("Выберите из категорий. Введите нужный идентификатор \n" + allCategoriesAsString);
-
-        // Получаем идентификатор категории из потока ввода
-        Integer categoryId = Integer.parseInt(scanner.next());
-
-        // Обработка неправильного ввода
-        if (!categoryById.containsKey(categoryId)) {
-            throw new NewsAggregatorIllegalArgumentException(Errors.UNKNOWN_MENU_KEY);
-        }
+        // Преобразуем ключ ввода в идентификатор
+        int categoryId = Integer.parseInt(inputKey);
 
         // Фильтрация новостей по категории
-        FilterService.NewsFilter newsFilter = FilterService.NewsFilter.builder()
+        NewsFilter newsFilter = NewsFilter.builder()
                 .byCategory(categoryId)
                 .build();
         List<News> filteredNews = filterService.filter(newsFilter);
@@ -83,6 +84,7 @@ public class FilterNewsByCategorySwitcher extends BaseMenuSwitcher {
         String title = category.getName();
 
         // Формируем динамическое меню для списка новостей и заменяем идентификатор перехода
+        NewsDynamicMenuFactory newsDynamicMenuFactory = newsDynamicMenuFactoryObjectFactory.getObject();
         String menuId = newsDynamicMenuFactory.create(title, filteredNews);
         setNextMenuId(menuId);    }
 }

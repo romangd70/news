@@ -31,13 +31,14 @@ public interface Menu {
     boolean isDynamic();
 
     /**
-     * Получение элемента меню.
+     * Получение идентификатора элемента меню по ключу ввода.
+     * Элемент меню можно получить в реестре меню, используя этот идентификатор.
      *
      * @param inputKey Ключ ввода для активации элемента меню.
-     * @return Объект элемента меню
+     * @return Уникальный идентификатор элемента меню.
      * @throws NewsAggregatorNotFoundException Если с ключом ввода не связан ни один элемент меню.
      */
-    MenuItem getMenuItem(String inputKey) throws NewsAggregatorNotFoundException;
+    String getMenuItemId(String inputKey) throws NewsAggregatorNotFoundException;
 
     /**
      * Метод для визуализации меню.

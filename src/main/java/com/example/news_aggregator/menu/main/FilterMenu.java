@@ -1,18 +1,15 @@
 package com.example.news_aggregator.menu.main;
 
-import com.example.news_aggregator.common.menu.MenuRegistry;
 import com.example.news_aggregator.common.menu.impl.BaseMenu;
 import com.example.news_aggregator.menu.StaticMenu;
 import com.example.news_aggregator.menu.StaticMenuItem;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FilterMenu extends BaseMenu {
 
-    @Autowired
-    protected FilterMenu(MenuRegistry menuRegistry) {
-        super(StaticMenu.FILTER, menuRegistry);
+    protected FilterMenu() {
+        super(StaticMenu.FILTER);
 
         addMenuItem("1", StaticMenuItem.BY_DATE_SWITCHER);
         addMenuItem("2", StaticMenuItem.BY_SOURCE_SWITCHER);

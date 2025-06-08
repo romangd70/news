@@ -16,6 +16,8 @@ import com.example.news_aggregator.output.xlsx.ExportNewsToXlsxCommand;
 import com.example.news_aggregator.output.xlsx.NewsXlsxExporter;
 import com.example.news_aggregator.service.setting.SettingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class NewsDynamicMenuFactory {
 
     /**
@@ -91,8 +94,7 @@ public class NewsDynamicMenuFactory {
             BaseMenu menu = new BaseMenu(
                     menuId,
                     String.format("%s (страница %s из %s)", title, currentPageIdx + 1, pageCount),
-                    true, // Динамический дескриптор
-                    menuRegistry
+                    true // Динамический дескриптор
             );
             menus.add(menu);
 
@@ -138,7 +140,7 @@ public class NewsDynamicMenuFactory {
 
                 // На каждую страницу добавим команду выгрузки в xlsx
                 // Выгружаем все новости, вне зависимости от размера страницы
-                currentMenu.addMenuItem("xlsx", exportNewsCommand.getId());
+                currentMenu.addMenuItem("xlsx", exportNewsCommand.getTitle(), exportNewsCommand.getId());
             }
 
             // Пункт выхода из просмотра
@@ -204,7 +206,7 @@ public class NewsDynamicMenuFactory {
 
     private void createDynamicSwitcher(
             BaseMenu menu,
-            String title,
+            String menuItemTitle,
             String inputKey,
             String nextMenuId
     ) {
@@ -212,7 +214,7 @@ public class NewsDynamicMenuFactory {
         String menuItemId = UUID.randomUUID().toString();
         BaseMenuSwitcher menuSwitcher = new BaseMenuSwitcher(
                 menuItemId,
-                title,
+                menuItemTitle,
                 nextMenuId
         );
 
@@ -220,20 +222,19 @@ public class NewsDynamicMenuFactory {
         menuRegistry.registerMenuItem(menuSwitcher);
 
         // Добавление в меню
-        menu.addMenuItem(inputKey, menuItemId);
+        menu.addMenuItem(inputKey, menuItemTitle, menuItemId);
     }
 
     private String createNewsItemMenu(
             String parentMenuId,
             News newsItem,
-            String title
+            String menuItemTitle
     ) {
         // Создание меню просмотра конкретной новости
         String menuId = UUID.randomUUID().toString();
         DynamicNewsItemMenu newsItemMenu = new DynamicNewsItemMenu(
                 menuId,
-                title,
-                menuRegistry,
+                menuItemTitle,
                 newsItem
         );
 
@@ -242,7 +243,7 @@ public class NewsDynamicMenuFactory {
                 "Выгрузка новости в Excel файл",
                 List.of(newsItem)
         );
-        newsItemMenu.addMenuItem("xlsx", exportNewsItemCommand.getId());
+        newsItemMenu.addMenuItem("xlsx", exportNewsItemCommand.getTitle(), exportNewsItemCommand.getId());
 
         // Выход из просмотра новости
         createDynamicSwitcher(newsItemMenu, "Назад", "0", parentMenuId);

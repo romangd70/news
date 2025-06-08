@@ -96,7 +96,10 @@ public class NewsParserImpl implements NewsParser {
             // Парсим каждую статью
             for (Element link : articlesFromSource) {
                 String articleUrl = link.absUrl("href");
-                newsList.add(parseArticle(articleUrl, source));
+                News news = parseArticle(articleUrl, source);
+                if (news != null) {
+                    newsList.add(news);
+                }
             }
 
             // Исключаем статьи, которые уже есть в базе данных
@@ -115,7 +118,7 @@ public class NewsParserImpl implements NewsParser {
 
         } catch (IOException e) {
             // При ошибке парсинга
-            throw new NewsAggregatorIllegalStateException(Errors.UNABLE_TO_CONNECT_SOURCE_S, source.getName());
+            System.out.println(String.format(Errors.UNABLE_TO_CONNECT_SOURCE_S.getDefaultMessage(), source.getName()));
         }
     }
 
@@ -135,7 +138,8 @@ public class NewsParserImpl implements NewsParser {
             news.setHash(news.hashCode());
             return news;
         } catch (IOException e) {
-            throw new NewsAggregatorIllegalStateException(Errors.ERROR_PARSING_ARTICLE_S);
+            System.out.println(String.format(Errors.ERROR_PARSING_ARTICLE_S.getDefaultMessage(), articleUrl));
+            return null;
         }
     }
 

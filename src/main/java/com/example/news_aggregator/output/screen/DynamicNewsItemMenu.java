@@ -1,6 +1,5 @@
 package com.example.news_aggregator.output.screen;
 
-import com.example.news_aggregator.common.menu.MenuRegistry;
 import com.example.news_aggregator.common.menu.impl.BaseMenu;
 import com.example.news_aggregator.model.news.News;
 
@@ -20,10 +19,9 @@ public class DynamicNewsItemMenu extends BaseMenu {
     DynamicNewsItemMenu(
             String id,
             String title,
-            MenuRegistry menuRegistry,
             News newsItem
     ) {
-        super(id, title, true, menuRegistry);
+        super(id, title, true);
 
         this.newsItem = newsItem;
     }
@@ -31,10 +29,9 @@ public class DynamicNewsItemMenu extends BaseMenu {
     @Override
     protected void printMenuDescription() {
         // Выведем информацию о новости текст новости в описание меню
-        StringBuilder headerBuilder = new StringBuilder();
-        headerBuilder.append(String.format("%-15s: %s%n", "Дата публикации", newsItem.getPublicationDate()));
-        headerBuilder.append(String.format("%-15s: %s%n", "Категория", newsItem.getCategory().getName()));
-        headerBuilder.append(String.format("%-15s: %s%n", "Источник", newsItem.getSource().getName()));
+        String headerBuilder = String.format("%-15s: %s%n", "Дата публикации", newsItem.getPublicationDate()) +
+                String.format("%-15s: %s%n", "Категория", newsItem.getCategory().getName()) +
+                String.format("%-15s: %s%n", "Источник", newsItem.getSource().getName());
         System.out.println(headerBuilder);
 
         System.out.println(newsItem.getTitle());

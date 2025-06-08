@@ -9,6 +9,7 @@ import java.util.Arrays;
 @Getter
 public enum SettingType implements EnumWithId {
 
+    // На 8 утра каждый день
     AUTO_PARSING_FREQUENCY(1, "0 0 8 * * *"),
     SORTING_TYPE(2, "1");
 

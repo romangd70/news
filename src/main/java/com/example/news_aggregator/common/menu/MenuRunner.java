@@ -74,7 +74,8 @@ public class MenuRunner {
             // В случае неудачной попытки выводим сообщение об ошибке и повторяем цикл заново
             MenuItem menuItem;
             try {
-                menuItem = currentMenu.getMenuItem(inputKey);
+                String menuItemId = currentMenu.getMenuItemId(inputKey);
+                menuItem = menuRegistry.getMenuItem(menuItemId);
             } catch (NewsAggregatorNotFoundException e) {
                 System.out.println(e.getMessage());
                 continue;

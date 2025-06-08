@@ -19,7 +19,6 @@ public class SettingServiceImpl implements SettingService {
     // Регулярное выражение для проверки шестизначного cron выражения
     private static final String CRON_REGEX = "^([0-5]?\\d|\\*)\\s+([0-5]?\\d|\\*)\\s+([01]?\\d|2[0-3]|\\*)\\s+([1-9]|[12]\\d|3[01]|\\*|\\?|L|W)\\s+(1[0-2]|0?[1-9]|\\*|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\\s+([0-7]|MON|TUE|WED|THU|FRI|SAT|SUN|\\*|\\?|L)$";
     private static final Pattern CRON_PATTERN = Pattern.compile(CRON_REGEX);
-    private static final String DEFAULT_CRON = "0 0 8 * * *";
 
     private final SettingRepository settingRepository;
 
@@ -33,7 +32,7 @@ public class SettingServiceImpl implements SettingService {
         Optional<Setting> setting = settingRepository.findById(id);
         if (setting.isEmpty()) {
             if (id == SettingType.AUTO_PARSING_FREQUENCY.getId()) {
-                return DEFAULT_CRON;
+                return SettingType.AUTO_PARSING_FREQUENCY.getDefaultValue();
             }
             throw new NewsAggregatorNotFoundException(Errors.SETTING_TYPE_ID_S_NOT_FOUND, id);
         }

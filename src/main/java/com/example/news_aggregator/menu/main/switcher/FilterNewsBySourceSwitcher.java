@@ -1,17 +1,19 @@
 package com.example.news_aggregator.menu.main.switcher;
 
-import com.example.news_aggregator.common.exception.NewsAggregatorIllegalArgumentException;
+import com.example.news_aggregator.common.menu.MenuUtils;
 import com.example.news_aggregator.common.menu.impl.BaseMenuSwitcher;
-import com.example.news_aggregator.enums.Errors;
 import com.example.news_aggregator.menu.StaticMenuItem;
 import com.example.news_aggregator.model.news.News;
 import com.example.news_aggregator.model.news.Source;
 import com.example.news_aggregator.output.screen.NewsDynamicMenuFactory;
 import com.example.news_aggregator.repository.SourceRepository;
 import com.example.news_aggregator.service.filter.FilterService;
+import com.example.news_aggregator.service.filter.NewsFilter;
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -23,19 +25,19 @@ public class FilterNewsBySourceSwitcher extends BaseMenuSwitcher {
 
     private final FilterService filterService;
     private final SourceRepository sourceRepository;
-    private final NewsDynamicMenuFactory newsDynamicMenuFactory;
+    private final ObjectFactory<NewsDynamicMenuFactory> newsDynamicMenuFactoryObjectFactory;
 
     @Autowired
     protected FilterNewsBySourceSwitcher(
             FilterService filterService,
             SourceRepository sourceRepository,
-            NewsDynamicMenuFactory newsDynamicMenuFactory
+            ObjectFactory<NewsDynamicMenuFactory> newsDynamicMenuFactoryObjectFactory
     ) {
         super(StaticMenuItem.BY_SOURCE_SWITCHER);
 
         this.filterService = filterService;
         this.sourceRepository = sourceRepository;
-        this.newsDynamicMenuFactory = newsDynamicMenuFactory;
+        this.newsDynamicMenuFactoryObjectFactory = newsDynamicMenuFactoryObjectFactory;
     }
 
     @Override
@@ -50,31 +52,29 @@ public class FilterNewsBySourceSwitcher extends BaseMenuSwitcher {
             System.out.println("Источники не найдены, добавьте источники.");
             return;
         }
-        System.out.println("Выберите из существующих источников. Введите id источника.");
 
-        List<String> sourcesNames = sourcesById.values()
+        // Подготавливаем список источников к отображению
+        // Ключом ввода выступит идентификатор источника
+        List<MenuUtils.MenuItemToDisplay> menuItemsToDisplay = sourcesById.values()
                 .stream()
-                .map(source -> String.format("%s - %s%n", source.getId(), source.getName()))
+                .map(source -> new MenuUtils.MenuItemToDisplay(
+                        String.valueOf(source.getId()), source.getName()))
+                .sorted(Comparator.comparing(MenuUtils.MenuItemToDisplay::getMenuItemTitle))
                 .toList();
 
-        StringBuilder stringBuilder = new StringBuilder();
-        for (String source : sourcesNames) {
-            stringBuilder.append(source);
-        }
-        String allSourcesAsString = stringBuilder.toString();
+        // Отображаем список и получаем ключ из потока ввода
+        String inputKey = performInput(
+                scanner,
+                "Доступные источники",
+                "Введите идентификатор источника: ",
+                menuItemsToDisplay
+        );
 
-        System.out.println("Выберите из категорий. Введите нужный идентификатор \n" + allSourcesAsString);
+        // Преобразуем ключ ввода в идентификатор
+        int sourceId = Integer.parseInt(inputKey);
 
-        // Получаем идентификатор источника из потока ввода
-        Integer sourceId = Integer.parseInt(scanner.next());
-
-        // Обработка неправильного ввода
-        if (!sourcesById.containsKey(sourceId)) {
-            throw new NewsAggregatorIllegalArgumentException(Errors.UNKNOWN_MENU_KEY);
-        }
-
-        // Фильтрация источников по категории
-        FilterService.NewsFilter newsFilter = FilterService.NewsFilter.builder()
+        // Фильтрация источников по источникам
+        NewsFilter newsFilter = NewsFilter.builder()
                 .bySource(sourceId)
                 .build();
         List<News> filteredNews = filterService.filter(newsFilter);
@@ -83,6 +83,7 @@ public class FilterNewsBySourceSwitcher extends BaseMenuSwitcher {
         String title = String.format("Новости от '%s'", sourcesById.get(sourceId).getName());
 
         // Формируем динамическое меню для списка новостей и заменяем идентификатор перехода
+        NewsDynamicMenuFactory newsDynamicMenuFactory = newsDynamicMenuFactoryObjectFactory.getObject();
         String menuId = newsDynamicMenuFactory.create(title, filteredNews);
         setNextMenuId(menuId);
     }
